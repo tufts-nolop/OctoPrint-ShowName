@@ -9,11 +9,21 @@ from octoprint.events import Events
 
 class ShowNamePlugin(octoprint.plugin.EventHandlerPlugin,
                      octoprint.plugin.SettingsPlugin):
+	_printname = ''
+	_ownername = ''
+	_username = ''
 	def on_event(self, event, payload):
 		if event == Events.PRINT_STARTED:
-			# Do things.
-		elif event in (Events.PRINT_DONE, Events.PRINT_FAILED, Events.PRINT_CANCELLED):
-			# Do other things.
+			_printname = payload['name']
+			_ownername = payload['owner']
+			_username = payload['user']
+			self._printer.commands('M117 User: {}'.format(_username))
+		elif event == Events.PRINT_DONE:
+			self._printer.commands('M117 [{}] Print Done'.format(_username))
+		elif event == Events.PRINT_FAILED:
+			self._printer.commands('M117 [{}] Print Failed'.format(_username))
+		elif event == Events.PRINT_CANCELLED:
+			self._printer.commands('M117 [{}] Print Cancelled'.format(_username))
 		elif event == Events.CONNECTED:
 			ip = self._get_host_ip()
 			if not ip:
